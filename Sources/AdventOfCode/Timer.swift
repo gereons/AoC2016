@@ -42,3 +42,4 @@ final class Timer {
         return "\(formatter.string(for: interval * 1000)!)ms"
     }
 }
+
