@@ -25,7 +25,7 @@ final class Day09: Day {
         let timer = Timer(day); defer { timer.show() }
 
         return data.reduce(0) { sum, line in
-            sum + decode(line).count
+            sum + decode(line)
         }
     }
 
@@ -60,12 +60,12 @@ final class Day09: Day {
         }
     }
 
-    func decode(_ str: String) -> String {
-        var result = ""
+    func decode(_ str: String) -> Int {
+        var result = 0
 
         var it = str.makeIterator()
         var rle: RLE?
-        var tmp = ""
+        var tmp = 0
         while let ch = it.next() {
             if ch == "(" && rle == nil {
                 var len = 0
@@ -79,16 +79,14 @@ final class Day09: Day {
                 rle = RLE(length: len, multiplier: mul)
             }
             else if let r = rle {
-                tmp.append(ch)
-                if tmp.count == r.length {
-                    for _ in 0..<r.multiplier {
-                        result.append(tmp)
-                    }
+                tmp += 1
+                if tmp == r.length {
+                    result += r.length * r.multiplier
                     rle = nil
-                    tmp = ""
+                    tmp = 0
                 }
             } else {
-                result.append(ch)
+                result += 1
             }
         }
 
@@ -100,7 +98,7 @@ final class Day09: Day {
         return decodeRLE(&it)
     }
 
-    func decodeRLE(_ it: inout String.Iterator) -> [RLE] {
+    private func decodeRLE(_ it: inout String.Iterator) -> [RLE] {
         var result = [RLE]()
         while let ch = it.next() {
             if ch == "(" {
