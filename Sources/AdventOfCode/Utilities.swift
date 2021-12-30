@@ -43,7 +43,7 @@ extension Sequence {
     func count(where condition: (Element) -> Bool) -> Int {
         var cnt = 0
         self.forEach {
-            if condition($0) { cnt += 1}
+            if condition($0) { cnt += 1 }
         }
         return cnt
     }
