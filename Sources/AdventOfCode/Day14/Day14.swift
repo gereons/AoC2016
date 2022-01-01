@@ -7,7 +7,7 @@
 import CryptoKit
 
 final class Day14: Day {
-    let input = Self.data
+    let input = Day14.data
 
     func run() {
         print("Solution for part 1: \(part1())")

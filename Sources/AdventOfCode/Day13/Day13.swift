@@ -98,16 +98,9 @@ extension Day13.Floorplan: Pathfinding {
     typealias Coordinate = Point
 
     func neighbors(for point: Point) -> [Point] {
-        let offsets = [ (0, -1), (-1, 0), (1, 0), (0, 1) ]
-
-        var n = [Point]()
-        for (dx, dy) in offsets {
-            let np = Point(point.x + dx, point.y + dy)
-            if np.x >= 0 && np.y >= 0 && self[np] == false {
-                n.append(np)
-            }
+        return point.neighbors().filter { p in
+            p.x >= 0 && p.y >= 0 && self[p] == false
         }
-        return n
     }
 
     func costToMove(from: Point, to: Point) -> Int {
