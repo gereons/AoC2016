@@ -6,28 +6,40 @@
 
 final class Day13: Day {
     class Floorplan {
-        let grid: [Point: Bool]
-        let size: Int
+        private let favoriteNumber: Int
+        private var maxX = 0
+        private var maxY = 0
 
-        init(size: Int, favoriteNumber: Int) {
-            var grid = [Point: Bool]()
-            self.size = size
-
-            for y in 0..<size {
-                for x in 0..<size {
-                    let point = Point(x, y)
-                    let num = Self.designerNumber(for: point, favoriteNumber)
-                    grid[point] = !num.isMultiple(of: 2)
-                }
-            }
-
-            self.grid = grid
+        init(favoriteNumber: Int) {
+            self.favoriteNumber = favoriteNumber
         }
 
-        func show() {
-            for y in 0..<size {
-                for x in 0..<size {
-                    let ch = grid[Point(x, y)] == true ? "#" : "."
+        subscript(_ index: Point) -> Bool {
+            maxX = max(maxX, index.x)
+            maxY = max(maxY, index.y)
+            return isWall(index)
+        }
+
+        private func isWall(_ point: Point) -> Bool {
+            return !designerNumber(for: point, favoriteNumber).isMultiple(of: 2)
+        }
+
+        private func designerNumber(for point: Point, _ favoriteNumber: Int) -> Int {
+            // x*x + 3*x + 2*x*y + y + y*y.
+            var n = (point.x + 3) * point.x + 2 * point.x * point.y + (point.y + 1) * point.y + favoriteNumber
+            var bits = 0
+            while n > 0 {
+                bits += n & 1
+                n >>= 1
+            }
+            return bits
+        }
+
+        func show(_ markers: Set<Point>) {
+            for y in 0...maxY {
+                for x in 0...maxX {
+                    let p = Point(x, y)
+                    let ch = markers.contains(p) ? "o" : isWall(p) ? "#" : " "
                     print(ch, terminator: "")
                 }
                 print()
@@ -35,27 +47,24 @@ final class Day13: Day {
             print()
         }
 
-        private static func designerNumber(for point: Point, _ favoriteNumber: Int) -> Int {
-            // x*x + 3*x + 2*x*y + y + y*y.
-            var n =
-                point.x * point.x +
-                3 * point.x +
-                2 * point.x * point.y +
-                point.y +
-                point.y * point.y +
-                favoriteNumber
-            print(n, String(n, radix: 2))
-            var bits = 0
-            while n > 0 {
-                bits += n & 1
-                n >>= 1
+        func floodfill(from point: Point, maxSteps: Int) -> Set<Point> {
+            var visited = Set<Point>()
+            floodfill(from: point, maxSteps: maxSteps, &visited)
+            return visited
+        }
+
+        private func floodfill(from point: Point, maxSteps: Int, _ visited: inout Set<Point>) {
+            if visited.contains(point) { return }
+            let pathfinder = AStarPathfinder(grid: self)
+            if pathfinder.shortestPathFrom(Point(1,1), to: point).count > maxSteps+1 { return }
+
+            visited.insert(point)
+            for n in neighbors(for: point) {
+                floodfill(from: n, maxSteps: maxSteps, &visited)
             }
-            print(bits)
-            return bits
         }
     }
 
-    // let input = 10
     let input = 1362
 
     func run() {
@@ -66,18 +75,22 @@ final class Day13: Day {
     private func part1() -> Int {
         let timer = Timer(day); defer { timer.show() }
 
-        let office = Floorplan(size: 45, favoriteNumber: input)
-        office.show()
-
-        let pathfinder = AStarPathfinder(grid: office)
+        let floorplan = Floorplan(favoriteNumber: input)
+        let pathfinder = AStarPathfinder(grid: floorplan)
         let path = pathfinder.shortestPathFrom(Point(1,1), to: Point(31,39))
+        // floorplan.show(Set(path))
 
         return path.count - 1
     }
 
     private func part2() -> Int {
         let timer = Timer(day); defer { timer.show() }
-        return 0
+
+        let floorplan = Floorplan(favoriteNumber: input)
+        let visited = floorplan.floodfill(from: Point(1,1), maxSteps: 50)
+        // floorplan.show(visited)
+
+        return visited.count
     }
 }
 
@@ -90,7 +103,7 @@ extension Day13.Floorplan: Pathfinding {
         var n = [Point]()
         for (dx, dy) in offsets {
             let np = Point(point.x + dx, point.y + dy)
-            if np.x >= 0 && np.y >= 0 && grid[np] == false {
+            if np.x >= 0 && np.y >= 0 && self[np] == false {
                 n.append(np)
             }
         }
