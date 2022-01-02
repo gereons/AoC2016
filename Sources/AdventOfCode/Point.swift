@@ -16,6 +16,10 @@ struct Point: Hashable {
         Point(self.x + point.x, self.y + point.y)
     }
 
+    static func +(_ lhs: Point, _ rhs: Point) -> Point {
+        lhs.add(rhs)
+    }
+
     func distance(from: Point, to: Point) -> Int {
         abs(to.x - from.x) + abs(to.y - from.y)
     }
