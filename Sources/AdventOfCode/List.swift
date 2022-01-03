@@ -111,7 +111,6 @@ struct List<Element> {
         var newHead: ListNode? = nil
         var newTail: ListNode? = nil
 
-        print("copy! \(count)")
         var node = head
         while node != nil {
             let copy = ListNode(node!.element)
