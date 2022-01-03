@@ -129,3 +129,26 @@ struct List<Element> {
         tail = newTail
     }
 }
+
+struct Queue<Element> {
+    private var storage: List<Element>
+
+    init() {
+        storage = List()
+    }
+
+    var isEmpty: Bool { storage.isEmpty }
+    var count: Int { storage.count }
+
+    mutating func push(_ element: Element) {
+        storage.append(element)
+    }
+
+    mutating func pop() -> Element? {
+        storage.removeFirst()
+    }
+
+    func peek() -> Element? {
+        storage.first
+    }
+}
