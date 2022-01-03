@@ -23,7 +23,9 @@ struct Point: Hashable {
     func distance(from: Point, to: Point) -> Int {
         abs(to.x - from.x) + abs(to.y - from.y)
     }
+}
 
+extension Point {
     enum Adjacency {
         case orthogonal, diagonal, all
     }
