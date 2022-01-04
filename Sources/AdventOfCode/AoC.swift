@@ -28,8 +28,8 @@ struct AdventOfCode {
 //        Day21().run()
 //        Day22().run()
 //        Day23().run()
-        Day24().run()
-//        Day25().run()
+//        Day24().run()
+        Day25().run()
         Timer.showTotal()
     }
 }
