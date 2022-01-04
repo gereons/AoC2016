@@ -20,8 +20,8 @@ struct Point: Hashable {
         lhs.add(rhs)
     }
 
-    func distance(from: Point, to: Point) -> Int {
-        abs(to.x - from.x) + abs(to.y - from.y)
+    func distance(to: Point) -> Int {
+        abs(to.x - self.x) + abs(to.y - self.y)
     }
 }
 
