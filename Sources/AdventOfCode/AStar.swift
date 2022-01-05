@@ -2,52 +2,51 @@
 //  AStar.swift
 //
 //  based on
-//  https://www.raywenderlich.com/3011-how-to-implement-a-pathfinding-with-cocos2d-tutorial
+//  https://www.raywenderlich.com/1734-how-to-implement-a-pathfinding-with-swift
+//  and
+//  https://github.com/davecom/SwiftPriorityQueue/blob/master/SwiftPriorityQueue/astar.swift
 //
 
 protocol Pathfinding {
     associatedtype Coordinate
+    associatedtype CostType
 
     func neighbors(for: Coordinate) -> [Coordinate]
-    func costToMove(from: Coordinate, to: Coordinate) -> Int
+    func costToMove(from: Coordinate, to: Coordinate) -> CostType
 
-    func hScore(from: Coordinate, to: Coordinate) -> Int
+    func hScore(from: Coordinate, to: Coordinate) -> CostType
 }
 
 // MARK: - implementation
 
-final class AStarPathfinder<PF: Pathfinding> where PF.Coordinate: Hashable {
+final class AStarPathfinder<PF: Pathfinding> where PF.Coordinate: Hashable, PF.CostType: Numeric & Comparable {
     typealias Coord = PF.Coordinate
+    typealias Cost = PF.CostType
 
-    private final class PathStep: Hashable, Comparable, CustomDebugStringConvertible {
+    private final class PathNode: Hashable, Comparable, CustomDebugStringConvertible {
         let coordinate: Coord
-        private(set) var parent: PathStep?
+        let parent: PathNode?
 
-        private(set) var gScore = 0
-        var hScore = 0
-        var fScore: Int {
-            gScore + hScore
-        }
+        let gScore: Cost
+        let hScore: Cost
+        var fScore: Cost { gScore + hScore }
 
-        init(coordinate: Coord) {
+        init(coordinate: Coord, parent: PathNode? = nil, moveCost: Cost = 0, hScore: Cost = 0) {
             self.coordinate = coordinate
-        }
-
-        func setParent(_ parent: PathStep, withMoveCost moveCost: Int) {
-            // The G score is equal to the parent G score + the cost to move from the parent to it
             self.parent = parent
-            self.gScore = parent.gScore + moveCost
+            self.gScore = (parent?.gScore ?? 0) + moveCost
+            self.hScore = hScore
         }
 
         func hash(into hasher: inout Hasher) {
             hasher.combine(coordinate)
         }
 
-        static func ==(lhs: PathStep, rhs: PathStep) -> Bool {
+        static func ==(lhs: PathNode, rhs: PathNode) -> Bool {
             lhs.coordinate == rhs.coordinate
         }
 
-        static func < (lhs: PathStep, rhs: PathStep) -> Bool {
+        static func < (lhs: PathNode, rhs: PathNode) -> Bool {
             lhs.fScore < rhs.fScore
         }
 
@@ -62,47 +61,35 @@ final class AStarPathfinder<PF: Pathfinding> where PF.Coordinate: Hashable {
         self.grid = grid
     }
 
-    func shortestPathFrom(_ start: Coord, to dest: Coord) -> [Coord] {
-        var closedSteps = Set<PathStep>()
-        var openSteps = Heap<PathStep>.minHeap()
-        openSteps.insert(PathStep(coordinate: start))
+    func shortestPathFrom(_ start: Coord, to destination: Coord) -> [Coord] {
+        var frontier = Heap<PathNode>.minHeap()
+        frontier.insert(PathNode(coordinate: start))
 
-        while !openSteps.isEmpty {
-            let currentStep = openSteps.pop()!
-            closedSteps.insert(currentStep)
+        var explored = Dictionary<Coord, Cost>()
+        explored[start] = 0
 
-            if currentStep.coordinate == dest {
+        while let currentNode = frontier.pop() {
+            let currentCoord = currentNode.coordinate
+
+            if currentCoord == destination {
                 var result = [Coord]()
-                var step: PathStep? = currentStep
-                while let s = step {
-                    result.append(s.coordinate)
-                    step = s.parent
+                var node: PathNode? = currentNode
+                while let n = node {
+                    result.append(n.coordinate)
+                    node = n.parent
                 }
                 return result.reversed()
             }
 
-            let neighbors = grid.neighbors(for: currentStep.coordinate)
-            for coordinate in neighbors {
-                let step = PathStep(coordinate: coordinate)
-                if closedSteps.contains(step) {
-                    continue
-                }
+            for neighbor in grid.neighbors(for: currentCoord) {
+                let moveCost = grid.costToMove(from: currentCoord, to: neighbor)
+                let newcost = currentNode.gScore + moveCost
 
-                let moveCost = grid.costToMove(from: currentStep.coordinate, to: step.coordinate)
-
-                if let existingIndex = openSteps.firstIndex(of: step) {
-                    let step = openSteps[existingIndex]
-
-                    if currentStep.gScore + moveCost < step.gScore {
-                        let step = openSteps.delete(at: existingIndex)!
-                        step.setParent(currentStep, withMoveCost: moveCost)
-                        openSteps.insert(step)
-                    }
-                } else {
-                    step.setParent(currentStep, withMoveCost: moveCost)
-                    step.hScore = grid.hScore(from: step.coordinate, to: dest)
-
-                    openSteps.insert(step)
+                if (explored[neighbor] == nil) || (explored[neighbor]! > newcost) {
+                    explored[neighbor] = newcost
+                    let hScore = grid.hScore(from: currentCoord, to: neighbor)
+                    let node = PathNode(coordinate: neighbor, parent: currentNode, moveCost: moveCost, hScore: hScore)
+                    frontier.insert(node)
                 }
             }
         }
