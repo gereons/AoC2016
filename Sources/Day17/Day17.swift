@@ -6,6 +6,7 @@
 
 import CryptoKit
 
+
 final class Day17: Day {
     enum Direction: String, CaseIterable {
         case up = "U"
@@ -24,7 +25,7 @@ final class Day17: Day {
     }
 
     let input = "hhhxzeay"
-
+    
     func run() {
         let (shortest, longest) = part1and2()
         print("Solution for part 1: \(shortest)")
