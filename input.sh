@@ -1,36 +1,40 @@
 #!/bin/sh
 
-YEAR=2016
+YR=2016
 DAY=$1
 
 if [ -z "$DAY" ]; then
-    DAY=$(date +%d)
+    DAY=$(date +%e | tr -d " ")
+fi
+
+if [ -r .aoc-session ]; then
+    AOC_SESSION=$(cat .aoc-session)
+fi
+
+if [ -z "$AOC_SESSION" ]; then
+    echo "no session found"
+    exit 1
 fi
 
 echo "getting puzzle input for day $DAY"
 
 D2=$(printf "%02d" $DAY)
 
-TMP=.input.$$.tmp
-
-curl -s https://adventofcode.com/$YEAR/day/$DAY/input --cookie "session=$AOC_SESSION" >$TMP
-
 (
 cat <<END
 //
-// Advent of Code $YEAR - input for day $D2
+// Advent of Code $YR - input for day $D2
 //
 
 extension Day$D2 {
-static let data = """
+static let input = #"""
 END
 
-cat $TMP
+UA="https://github.com/gereons/aoc2016"
+curl -s https://adventofcode.com/$YR/day/$DAY/input --cookie "session=$AOC_SESSION" -H "User-Agent: $UA"
 
 cat <<END
-"""
+"""#
 }
 END
-) >Sources/Day$D2/Day$D2+input.swift
-
-rm $TMP
+) >Sources/Inputs/Day$D2+Input.swift
